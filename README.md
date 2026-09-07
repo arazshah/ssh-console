@@ -48,6 +48,15 @@ npm start
 - [ ] HTTPS را از طریق Coolify/Let's Encrypt فعال نگه دارید (کوکی session با `secure` علامت‌گذاری می‌شود وقتی `NODE_ENV=production` است، که در Dockerfile همین‌طور تنظیم شده).
 - [ ] در نظر بگیرید که دسترسی به `ssh.araz.me` را با فایروال یا Coolify's "Access Control"/IP allowlist محدود کنید، چون این صفحه دروازه‌ای به سرورهای شماست.
 
+## عیب‌یابی: «WebSocket connection failed»
+
+اگر صفحه‌ی لاگین/فرم اتصال بالا می‌آید ولی همین پیام را موقع Connect می‌بینید، معمولاً یکی از این‌هاست:
+
+- **`APP_SECRET` در Coolify تنظیم نشده یا خالی است.** بدون آن، هر بار که کانتینر ری‌استارت می‌شود (مثلاً به‌خاطر یک healthcheck ناموفق) یک کلید تصادفی جدید ساخته می‌شود و session cookie‌های قبلی دیگر معتبر نیستند، پس اتصال `/ws` با خطای 401 رد می‌شود. مطمئن شوید `APP_SECRET` یک مقدار ثابت و طولانی در Environment Variables دارد (نه خالی).
+- **healthcheck کانتینر fail می‌شود و باعث ری‌استارت مکرر می‌شود.** `node:alpine` نه `curl` دارد نه `wget`؛ اگر Coolify یک healthcheck پیش‌فرض مبتنی بر curl تزریق کند همیشه fail می‌شود. این ریپو یک `HEALTHCHECK` مبتنی بر Node در `Dockerfile` و `docker-compose.yml` دارد که این مشکل را برطرف می‌کند — مطمئن شوید آخرین نسخه‌ی کد را دیپلوی کرده‌اید.
+- **پروکسی/CDN جلوی دامنه (مثلاً Cloudflare) WebSocket را قطع می‌کند.** طبق مرحله‌ی ۶ بالا، ابر نارنجی (Proxied) را برای `ssh.araz.me` خاموش کنید یا مطمئن شوید WebSocket support در آن فعال است.
+- برای بررسی دقیق‌تر، در مرورگر (F12 → Network → فیلتر WS) به کد وضعیت درخواست `/ws` نگاه کنید؛ و در Coolify، تب Logs کانتینر را در لحظه‌ی Connect زدن چک کنید.
+
 ## ساختار پروژه
 
 ```

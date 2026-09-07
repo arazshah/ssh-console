@@ -1,5 +1,8 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
+# Alpine's bundled npm has a known "Exit handler never called!" bug that
+# surfaces under slow/flaky registry connections - upgrade it first.
+RUN npm install -g npm@latest
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --omit=dev
 

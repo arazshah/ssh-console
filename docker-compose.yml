@@ -2,8 +2,14 @@ services:
   ssh-console:
     build: .
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    # No host port binding here on purpose: Coolify routes traffic to the
+    # container over its internal "coolify" network using the domain you
+    # set on the app (see README), so a static "3000:3000" host bind would
+    # collide with any other app also using host port 3000. For local
+    # testing, run:
+    #   docker compose run --rm -p 3000:3000 ssh-console
+    expose:
+      - "3000"
     environment:
       - APP_PASSWORD=${APP_PASSWORD}
       - APP_SECRET=${APP_SECRET}

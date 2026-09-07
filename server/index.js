@@ -82,15 +82,22 @@ const wss = new WebSocketServer({ noServer: true });
 attachWsHandler(wss);
 
 server.on('upgrade', (req, socket, head) => {
+  socket.on('error', (err) => {
+    console.warn(`[ws] socket error for ${req.url}: ${err.message}`);
+  });
+
   if (!req.url.startsWith('/ws')) {
+    console.warn(`[ws] rejected upgrade for unknown path: ${req.url}`);
     socket.destroy();
     return;
   }
   if (!auth.hasValidSession(req)) {
+    console.warn(`[ws] rejected upgrade: no valid session cookie (Cookie header present: ${Boolean(req.headers.cookie)})`);
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     socket.destroy();
     return;
   }
+  console.log('[ws] upgrade accepted, handing off to ssh handler');
   wss.handleUpgrade(req, socket, head, (ws) => {
     wss.emit('connection', ws, req);
   });

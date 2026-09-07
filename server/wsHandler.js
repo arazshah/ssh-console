@@ -89,6 +89,7 @@ function attach(wss) {
         });
 
         ssh.on('error', (err) => {
+          console.warn(`[ssh] connection error for ${username}@${host}:${port}: ${err.message}`);
           send(ws, { type: 'error', message: err.message || 'SSH connection error.' });
           ws.close();
         });
